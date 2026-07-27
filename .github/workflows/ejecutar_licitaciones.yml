@@ -28,7 +28,15 @@ jobs:
             libxml2-dev \
             libfontconfig1-dev \
             libharfbuzz-dev \
-            libfribidi-dev
+            libfribidi-dev \
+            libuv1-dev \
+            libfreetype6-dev \
+            libpng-dev \
+            libtiff-dev \
+            libjpeg-dev \
+            libwebp-dev \
+            libcairo2-dev \
+            pkg-config
 
       - name: Instalar paquetes de R
         shell: Rscript {0}
