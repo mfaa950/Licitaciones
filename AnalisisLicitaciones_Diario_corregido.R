@@ -485,23 +485,24 @@ if (cantidad_llamados == 0) {
       style = "Normal"
     )
 } else {
-  organismos <- unique(datos_relevantes$organismo_unidad)
+ organismos <- unique(datos_relevantes$organismo_unidad)
 
-  for (organismo in organismos) {
-    datos_org <- datos_relevantes |>
-      filter(organismo_unidad == organismo)
+for (org in organismos) {
 
-    doc <- doc |>
-      body_add_par(organismo, style = "Normal") |>
-      body_add_par(
-        paste0(
-          nrow(datos_org),
-          ifelse(nrow(datos_org) == 1, " llamado", " llamados")
-        )
-      ) |>
-      body_add_flextable(crear_tabla_organismo(datos_org)) |>
-      body_add_par("")
-  }
+  datos_org <- datos_relevantes |>
+    filter(organismo_unidad == org)
+
+  doc <- doc |>
+    body_add_par(org, style = "Normal") |>
+    body_add_par(
+      paste0(
+        nrow(datos_org),
+        ifelse(nrow(datos_org) == 1, " llamado", " llamados")
+      )
+    ) |>
+    body_add_flextable(crear_tabla_organismo(datos_org)) |>
+    body_add_par("")
+}
 }
 
 # Pie de página con numeración
