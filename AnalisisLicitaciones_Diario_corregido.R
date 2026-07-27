@@ -65,8 +65,7 @@ archivo_word <- paste0("Informe_licitaciones_", sufijo_fecha, ".docx")
 leer_html <- function(url) {
   request(url) |>
     req_user_agent(
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ",
-      "AppleWebKit/537.36 Chrome/124 Safari/537.36"
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
     ) |>
     req_headers(
       Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
