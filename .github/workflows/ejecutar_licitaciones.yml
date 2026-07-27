@@ -59,7 +59,7 @@ jobs:
       - name: Ejecutar busqueda e informe
         shell: Rscript {0}
         run: |
-          source("AnalisisLicitaciones_Diario.R", echo = TRUE)
+          source("AnalisisLicitaciones_Diario_corregido.R", echo = TRUE)
 
       - name: Guardar resultados
         uses: actions/upload-artifact@v4
