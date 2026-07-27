@@ -1,0 +1,58 @@
+name: Ejecutar búsqueda de licitaciones
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "0 12 * * *"
+      timezone: "America/Montevideo"
+
+jobs:
+  ejecutar-script:
+    runs-on: windows-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "release"
+
+      - name: Instalar paquetes de R
+        shell: Rscript {0}
+        run: |
+          paquetes <- c(
+            "httr2",
+            "rvest",
+            "dplyr",
+            "stringr",
+            "purrr",
+            "openxlsx",
+            "lubridate"
+          )
+
+          faltantes <- paquetes[
+            !vapply(paquetes, requireNamespace, logical(1), quietly = TRUE)
+          ]
+
+          if (length(faltantes) > 0) {
+            install.packages(faltantes, repos = "https://cloud.r-project.org")
+          }
+
+      - name: Ejecutar análisis de licitaciones
+        shell: Rscript {0}
+        run: |
+          source("AnalisisLicitaciones.R", echo = TRUE)
+
+      - name: Guardar archivos generados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-licitaciones
+          path: |
+            *.xlsx
+            *.docx
+          if-no-files-found: warn
+          retention-days: 30
