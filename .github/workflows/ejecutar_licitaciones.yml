@@ -1,10 +1,9 @@
-name: Búsqueda diaria de licitaciones
+name: Busqueda diaria de licitaciones
 
 on:
   workflow_dispatch:
 
   schedule:
-    # 15:00 UTC equivale a 12:00 en Uruguay
     - cron: "0 15 * * *"
 
 jobs:
@@ -16,7 +15,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Instalar R
-      
         uses: r-lib/actions/setup-r@v2
         with:
           r-version: "release"
@@ -32,7 +30,7 @@ jobs:
             libharfbuzz-dev \
             libfribidi-dev
 
-       - name: Instalar paquetes de R
+      - name: Instalar paquetes de R
         shell: Rscript {0}
         run: |
           install.packages(
@@ -49,7 +47,8 @@ jobs:
             ),
             repos = "https://cloud.r-project.org"
           )
-      - name: Ejecutar búsqueda e informe
+
+      - name: Ejecutar busqueda e informe
         shell: Rscript {0}
         run: |
           source("AnalisisLicitaciones_Diario.R", echo = TRUE)
@@ -64,4 +63,3 @@ jobs:
             Informe_licitaciones_*.docx
           if-no-files-found: error
           retention-days: 30
-      
