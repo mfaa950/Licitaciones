@@ -44,13 +44,13 @@ tipos <- c(
 
 # Se consulta ayer y hoy en ARCE, pero luego se conservan únicamente
 # las publicaciones realizadas durante las últimas 24 horas.
-momento_ejecucion <- now(tzone = "America/Montevideo")
-momento_desde <- momento_ejecucion - hours(24)
+hoy <- Sys.Date()
+ayer <- hoy - 7
 
-fecha_desde <- format(as.Date(momento_desde), "%Y-%m-%d")
-fecha_hasta <- format(as.Date(momento_ejecucion), "%Y-%m-%d")
+fecha_desde <- format(ayer, "%Y-%m-%d")
+fecha_hasta <- format(hoy, "%Y-%m-%d")
 
-sufijo_fecha <- format(as.Date(momento_ejecucion), "%Y-%m-%d")
+sufijo_fecha <- format(hoy, "%Y-%m-%d")
 
 archivo_excel_completo <- paste0("Licitaciones_ARCE_", sufijo_fecha, ".xlsx")
 archivo_excel_filtrado <- paste0("Licitaciones_relevantes_", sufijo_fecha, ".xlsx")
@@ -308,8 +308,8 @@ datos_limpios <- datos |>
   filter(
     is.na(fecha_publicado_dt) |
       (
-        fecha_publicado_dt >= momento_desde &
-          fecha_publicado_dt <= momento_ejecucion
+        fecha_publicado_dt >= ayer &
+          fecha_publicado_dt <= hoy
       )
   ) |>
   distinct(link, .keep_all = TRUE) |>
@@ -402,9 +402,9 @@ doc <- doc |>
   body_add_par(
     paste0(
       "Período de publicación: ",
-      format(momento_desde, "%d/%m/%Y %H:%M"),
+      format(ayer, "%d/%m/%Y %H:%M"),
       " al ",
-      format(momento_ejecucion, "%d/%m/%Y %H:%M")
+      format(hoy, "%d/%m/%Y %H:%M")
     )
   ) |>
   body_add_par(
