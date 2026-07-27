@@ -1,15 +1,15 @@
-name: Ejecutar búsqueda de licitaciones
+name: Búsqueda diaria de licitaciones
 
 on:
   workflow_dispatch:
 
   schedule:
-    - cron: "0 12 * * *"
-      timezone: "America/Montevideo"
+    # 15:00 UTC equivale a 12:00 en Uruguay
+    - cron: "0 15 * * *"
 
 jobs:
-  ejecutar-script:
-    runs-on: windows-latest
+  ejecutar:
+    runs-on: ubuntu-latest
 
     steps:
       - name: Descargar repositorio
@@ -20,39 +20,30 @@ jobs:
         with:
           r-version: "release"
 
-      - name: Instalar paquetes de R
+      - name: Instalar dependencias del sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libfontconfig1-dev \
+            libharfbuzz-dev \
+            libfribidi-dev
+
+      - name: Ejecutar búsqueda e informe
         shell: Rscript {0}
         run: |
-          paquetes <- c(
-            "httr2",
-            "rvest",
-            "dplyr",
-            "stringr",
-            "purrr",
-            "openxlsx",
-            "lubridate"
-          )
+          source("AnalisisLicitaciones_Diario.R", echo = TRUE)
 
-          faltantes <- paquetes[
-            !vapply(paquetes, requireNamespace, logical(1), quietly = TRUE)
-          ]
-
-          if (length(faltantes) > 0) {
-            install.packages(faltantes, repos = "https://cloud.r-project.org")
-          }
-
-      - name: Ejecutar análisis de licitaciones
-        shell: Rscript {0}
-        run: |
-          source("AnalisisLicitaciones.R", echo = TRUE)
-
-      - name: Guardar archivos generados
-        if: always()
+      - name: Guardar resultados
         uses: actions/upload-artifact@v4
         with:
-          name: informe-licitaciones
+          name: informe-licitaciones-${{ github.run_number }}
           path: |
-            *.xlsx
-            *.docx
-          if-no-files-found: warn
+            Licitaciones_ARCE_*.xlsx
+            Licitaciones_relevantes_*.xlsx
+            Informe_licitaciones_*.docx
+          if-no-files-found: error
           retention-days: 30
+      
