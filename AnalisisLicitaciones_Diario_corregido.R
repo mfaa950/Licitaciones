@@ -390,8 +390,8 @@ cantidad_organismos <- n_distinct(datos_relevantes$organismo_unidad)
 doc <- read_docx()
 
 doc <- doc |>
-  body_add_par("INFORME DE LLAMADOS", style = "Title") |>
-  body_add_par("Informe de llamados por organismo", style = "heading 1") |>
+  body_add_par("INFORME DE LLAMADOS", style = "heading 1") |>
+  body_add_par("Informe de llamados por organismo", style = "heading 2") |>
   body_add_par(
     paste0(
       "Detalle de ", cantidad_llamados,
