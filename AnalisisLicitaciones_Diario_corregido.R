@@ -42,15 +42,15 @@ tipos <- c(
   "LP" = "Licitación Pública"
 )
 
-# Se consulta ayer y hoy en ARCE, pero luego se conservan únicamente
-# las publicaciones realizadas durante las últimas 24 horas.
-momento_ejecucion <- now(tzone = "America/Montevideo")
-momento_desde <- momento_ejecucion - hours(24*7)
+# Se consultan las publicaciones comprendidas entre 7 días atrás y hoy.
+# Ejemplo: si hoy es 27/07/2026, se consulta desde 20/07/2026 hasta 27/07/2026.
+hoy <- Sys.Date()
+fecha_inicio <- hoy - 7
 
-fecha_desde <- format(as.Date(momento_desde), "%Y-%m-%d")
-fecha_hasta <- format(as.Date(momento_ejecucion), "%Y-%m-%d")
+fecha_desde <- format(fecha_inicio, "%Y-%m-%d")
+fecha_hasta <- format(hoy, "%Y-%m-%d")
 
-sufijo_fecha <- format(as.Date(momento_ejecucion), "%Y-%m-%d")
+sufijo_fecha <- format(hoy, "%Y-%m-%d")
 
 archivo_excel_completo <- paste0("Licitaciones_ARCE_", sufijo_fecha, ".xlsx")
 archivo_excel_filtrado <- paste0("Licitaciones_relevantes_", sufijo_fecha, ".xlsx")
@@ -281,6 +281,7 @@ scrapear_tipo <- function(tipo_codigo, tipo_nombre) {
 # ------------------------------------------------------------
 
 datos <- imap_dfr(tipos, ~ scrapear_tipo(.y, .x))
+message("Llamados descargados desde ARCE antes de filtrar: ", nrow(datos))
 
 datos_limpios <- datos |>
   mutate(
@@ -305,11 +306,14 @@ datos_limpios <- datos |>
       objeto
     )
   ) |>
+  mutate(
+    fecha_publicado_date = as.Date(fecha_publicado_dt)
+  ) |>
   filter(
-    is.na(fecha_publicado_dt) |
+    is.na(fecha_publicado_date) |
       (
-        fecha_publicado_dt >= momento_desde &
-          fecha_publicado_dt <= momento_ejecucion
+        fecha_publicado_date >= fecha_inicio &
+          fecha_publicado_date <= hoy
       )
   ) |>
   distinct(link, .keep_all = TRUE) |>
@@ -325,6 +329,8 @@ datos_limpios <- datos |>
     objeto,
     link
   )
+
+message("Llamados luego del filtro de fechas: ", nrow(datos_limpios))
 
 datos_relevantes <- datos_limpios |>
   filter(
@@ -390,8 +396,8 @@ cantidad_organismos <- n_distinct(datos_relevantes$organismo_unidad)
 doc <- read_docx()
 
 doc <- doc |>
-  body_add_par("INFORME DE LLAMADOS", style = "Title") |>
-  body_add_par("Informe de llamados por organismo", style = "heading 1") |>
+  body_add_par("INFORME DE LLAMADOS", style = "Normal") |>
+  body_add_par("Informe de llamados por organismo", style = "Normal") |>
   body_add_par(
     paste0(
       "Detalle de ", cantidad_llamados,
@@ -402,9 +408,9 @@ doc <- doc |>
   body_add_par(
     paste0(
       "Período de publicación: ",
-      format(momento_desde, "%d/%m/%Y %H:%M"),
+      format(fecha_inicio, "%d/%m/%Y"),
       " al ",
-      format(momento_ejecucion, "%d/%m/%Y %H:%M")
+      format(hoy, "%d/%m/%Y")
     )
   ) |>
   body_add_par(
@@ -415,7 +421,7 @@ if (cantidad_llamados == 0) {
   doc <- doc |>
     body_add_par("") |>
     body_add_par(
-      "No se encontraron llamados de Intendencias ni del Ministerio de Transporte y Obras Públicas publicados durante las últimas 24 horas.",
+      paste0("No se encontraron llamados de Intendencias ni del Ministerio de Transporte y Obras Públicas publicados entre ", format(fecha_inicio, "%d/%m/%Y"), " y ", format(hoy, "%d/%m/%Y"), "."),
       style = "Normal"
     )
 } else {
@@ -426,7 +432,7 @@ if (cantidad_llamados == 0) {
       filter(organismo_unidad == organismo)
 
     doc <- doc |>
-      body_add_par(organismo, style = "heading 2") |>
+      body_add_par(organismo, style = "Normal") |>
       body_add_par(
         paste0(
           nrow(datos_org),
@@ -459,7 +465,7 @@ print(doc, target = archivo_word)
 # ------------------------------------------------------------
 
 message("Proceso terminado correctamente.")
-message("Período exacto: ", momento_desde, " a ", momento_ejecucion)
+message("Período consultado: ", fecha_inicio, " a ", hoy)
 message("Total de llamados encontrados: ", nrow(datos_limpios))
 message("Llamados relevantes: ", cantidad_llamados)
 message("Organismos relevantes: ", cantidad_organismos)
