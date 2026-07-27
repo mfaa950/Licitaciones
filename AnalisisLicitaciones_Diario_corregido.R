@@ -47,6 +47,8 @@ tipos <- c(
 hoy <- Sys.Date()
 fecha_inicio <- hoy - 7
 
+# ARCE utiliza fechas simples en el parámetro rango-fecha.
+# No agregar horas ni caracteres codificados.
 fecha_desde <- format(fecha_inicio, "%Y-%m-%d")
 fecha_hasta <- format(hoy, "%Y-%m-%d")
 
@@ -214,14 +216,33 @@ scrapear_tipo <- function(tipo_codigo, tipo_nombre) {
   for (page in 1:300) {
     message("  Página ", page)
     url <- armar_url(tipo_codigo, page)
+    if (page == 1) message("  URL consultada: ", url)
 
-    doc <- tryCatch(leer_html(url), error = function(e) NULL)
+    doc <- tryCatch(
+      leer_html(url),
+      error = function(e) {
+        message("  Error al abrir ARCE: ", conditionMessage(e))
+        NULL
+      }
+    )
     if (is.null(doc)) break
 
     links <- doc |>
       html_elements(xpath = "//a[contains(@href, 'mostrar-llamado')]")
 
-    if (length(links) == 0) break
+    # Respaldo por si ARCE cambia ligeramente la ruta de los vínculos.
+    if (length(links) == 0) {
+      links <- doc |>
+        html_elements(xpath = "//a[contains(@href, 'llamado') or contains(@href, 'compra')]") |>
+        keep(~ str_detect(html_text2(.x), regex("Licitación (Abreviada|Pública)", ignore_case = TRUE)))
+    }
+
+    if (length(links) == 0) {
+      texto_pagina <- html_text2(doc)
+      message("  No se detectaron enlaces en la página ", page,
+              ". Vista previa: ", str_sub(str_squish(texto_pagina), 1, 250))
+      break
+    }
 
     tabla_links <- tibble(
       titulo = links |> html_text2(),
@@ -281,6 +302,7 @@ scrapear_tipo <- function(tipo_codigo, tipo_nombre) {
 # ------------------------------------------------------------
 
 datos <- imap_dfr(tipos, ~ scrapear_tipo(.y, .x))
+message("Filas descargadas directamente de ARCE: ", nrow(datos))
 message("Llamados descargados desde ARCE antes de filtrar: ", nrow(datos))
 
 datos_limpios <- datos |>
@@ -337,7 +359,7 @@ datos_relevantes <- datos_limpios |>
     str_detect(
       organismo_unidad,
       regex(
-        "^Ministerio de Transporte y Obras P[uú]blicas$|^Intendencia",
+        "^Ministerio de Transporte y Obras P[uú]blicas|^Intendencia",
         ignore_case = TRUE
       )
     )
