@@ -44,13 +44,13 @@ tipos <- c(
 
 # Se consulta ayer y hoy en ARCE, pero luego se conservan únicamente
 # las publicaciones realizadas durante las últimas 24 horas.
-hoy <- Sys.Date()
-ayer <- hoy - 7
+momento_ejecucion <- now(tzone = "America/Montevideo")
+momento_desde <- momento_ejecucion - hours(24*7)
 
-fecha_desde <- format(ayer, "%Y-%m-%d")
-fecha_hasta <- format(hoy, "%Y-%m-%d")
+fecha_desde <- format(as.Date(momento_desde), "%Y-%m-%d")
+fecha_hasta <- format(as.Date(momento_ejecucion), "%Y-%m-%d")
 
-sufijo_fecha <- format(hoy, "%Y-%m-%d")
+sufijo_fecha <- format(as.Date(momento_ejecucion), "%Y-%m-%d")
 
 archivo_excel_completo <- paste0("Licitaciones_ARCE_", sufijo_fecha, ".xlsx")
 archivo_excel_filtrado <- paste0("Licitaciones_relevantes_", sufijo_fecha, ".xlsx")
@@ -308,8 +308,8 @@ datos_limpios <- datos |>
   filter(
     is.na(fecha_publicado_dt) |
       (
-        fecha_publicado_dt >= ayer &
-          fecha_publicado_dt <= hoy
+        fecha_publicado_dt >= momento_desde &
+          fecha_publicado_dt <= momento_ejecucion
       )
   ) |>
   distinct(link, .keep_all = TRUE) |>
@@ -390,8 +390,8 @@ cantidad_organismos <- n_distinct(datos_relevantes$organismo_unidad)
 doc <- read_docx()
 
 doc <- doc |>
-  body_add_par("INFORME DE LLAMADOS", style = "heading 1") |>
-  body_add_par("Informe de llamados por organismo", style = "heading 2") |>
+  body_add_par("INFORME DE LLAMADOS", style = "Title") |>
+  body_add_par("Informe de llamados por organismo", style = "heading 1") |>
   body_add_par(
     paste0(
       "Detalle de ", cantidad_llamados,
@@ -402,9 +402,9 @@ doc <- doc |>
   body_add_par(
     paste0(
       "Período de publicación: ",
-      format(ayer, "%d/%m/%Y %H:%M"),
+      format(momento_desde, "%d/%m/%Y %H:%M"),
       " al ",
-      format(hoy, "%d/%m/%Y %H:%M")
+      format(momento_ejecucion, "%d/%m/%Y %H:%M")
     )
   ) |>
   body_add_par(
