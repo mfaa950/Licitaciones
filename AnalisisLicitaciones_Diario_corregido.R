@@ -305,6 +305,25 @@ datos <- imap_dfr(tipos, ~ scrapear_tipo(.y, .x))
 message("Filas descargadas directamente de ARCE: ", nrow(datos))
 message("Llamados descargados desde ARCE antes de filtrar: ", nrow(datos))
 
+# ------------------------------------------------------------
+# ARCHIVO INTERMEDIO: RESULTADO DIRECTO DE LA CONSULTA A ARCE
+# Se genera antes de aplicar cualquier filtro posterior.
+# ------------------------------------------------------------
+
+archivo_intermedio <- paste0(
+  "Consulta_ARCE_intermedia_",
+  sufijo_fecha,
+  ".xlsx"
+)
+
+write.xlsx(
+  datos,
+  archivo_intermedio,
+  overwrite = TRUE
+)
+
+message("Archivo intermedio generado: ", archivo_intermedio)
+
 datos_limpios <- datos |>
   mutate(
     numero_llamado = str_replace_all(
@@ -491,6 +510,7 @@ message("Período consultado: ", fecha_inicio, " a ", hoy)
 message("Total de llamados encontrados: ", nrow(datos_limpios))
 message("Llamados relevantes: ", cantidad_llamados)
 message("Organismos relevantes: ", cantidad_organismos)
+message("Archivo intermedio ARCE: ", archivo_intermedio)
 message("Excel completo: ", archivo_excel_completo)
 message("Excel filtrado: ", archivo_excel_filtrado)
 message("Informe Word: ", archivo_word)
