@@ -396,7 +396,7 @@ datos_relevantes <- datos_limpios |>
     str_detect(
       organismo,
       regex(
-        "^Ministerio de Transporte y Obras Públicas|^Intendencia",
+        "^Ministerio de Transporte y Obras Públicas|^Intendencia|^Ministerio del Interior",
         ignore_case = TRUE
       )
     )
