@@ -325,21 +325,36 @@ message("Archivo intermedio generado: ", archivo_intermedio)
 
 datos_limpios <- datos |>
   mutate(
-    numero_llamado = str_replace_all(
+    numero_llamado_original = str_replace_all(
       numero_llamado,
       fixed("&sol;"),
       "/"
     ),
+    
+    numero_llamado = str_extract(
+      numero_llamado_original,
+      "^[A-Za-z0-9]+/[0-9]{4}"
+    ),
+    
+    organismo = str_trim(
+      str_remove(
+        numero_llamado_original,
+        "^[A-Za-z0-9]+/[0-9]{4}"
+      )
+    ),
+    
     fecha_publicado_dt = dmy_hm(
       fecha_publicado,
       tz = "America/Montevideo",
       quiet = TRUE
     ),
+    
     fecha_apertura_dt = dmy_hm(
       fecha_apertura,
       tz = "America/Montevideo",
       quiet = TRUE
     ),
+    
     objeto = if_else(
       is.na(objeto) | objeto == "",
       "No informado",
@@ -357,11 +372,16 @@ datos_limpios <- datos |>
       )
   ) |>
   distinct(link, .keep_all = TRUE) |>
-  arrange(organismo_unidad, fecha_apertura_dt, fecha_publicado_dt) |>
+  arrange(
+    organismo_unidad,
+    fecha_apertura_dt,
+    fecha_publicado_dt
+  ) |>
   select(
     tipo,
     tipo_codigo,
     numero_llamado,
+    organismo,
     organismo_unidad,
     fecha_publicado,
     fecha_apertura,
@@ -369,24 +389,24 @@ datos_limpios <- datos |>
     objeto,
     link
   )
-
 message("Llamados luego del filtro de fechas: ", nrow(datos_limpios))
 
 datos_relevantes <- datos_limpios |>
   filter(
     str_detect(
-      organismo_unidad,
+      organismo,
       regex(
-        "^Ministerio de Transporte y Obras P[uú]blicas|^Intendencia",
+        "^Ministerio de Transporte y Obras Públicas|^Intendencia",
         ignore_case = TRUE
       )
     )
   ) |>
   arrange(
-    organismo_unidad,
+    organismo,
     dmy_hm(fecha_apertura, quiet = TRUE),
     dmy_hm(fecha_publicado, quiet = TRUE)
   )
+
 
 # ------------------------------------------------------------
 # EXPORTACIÓN A EXCEL
