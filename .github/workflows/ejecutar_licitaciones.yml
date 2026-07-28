@@ -10,7 +10,7 @@ on:
       - "generar_html.R"
       - ".github/workflows/ejecutar_licitaciones.yml"
   schedule:
-    - cron: "0 15 * * *"
+    - cron: "0 12 * * *"
 
 permissions:
   contents: write
